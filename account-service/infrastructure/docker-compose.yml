@@ -1,0 +1,191 @@
+version: "3.8"
+services:
+  eureka-server:
+    image: nghhie/eureka-server:latest
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_HOSTNAME=eureka-server
+    networks:
+      - microservice-network
+
+  api-gateway:
+    image: nghhie/api-gateway:latest 
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - EUREKA_SERVER_HOST=eureka-server
+      - SPRING_DATA_REDIS_HOST=redis-shared
+      - SPRING_DATA_REDIS_PORT=6379
+    depends_on:
+      - eureka-server
+    networks:
+      - microservice-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-shared
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - microservice-network
+
+  # Shared Kafka
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka-shared
+    ports:
+      - "9092:9092"   # host connect qua localhost:9092
+      - "29092:29092" # container khác connect qua kafka:29092
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx512m"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka:29092,EXTERNAL://localhost:9092"
+      KAFKA_LISTENERS: "INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:29093"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:29093"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+    volumes:
+      - kafka_shared_data:/var/lib/kafka/data
+    networks:
+      - microservice-network
+
+  # Account Service Database
+  postgres-account:
+    image: postgres:15
+    container_name: postgres-account-dev
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: accountservicedb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1111
+    volumes:
+      - postgres_account_data:/var/lib/postgresql/data
+    networks:
+      - microservice-network
+
+  # account-service:
+  #   image: account-service:latest
+  #   container_name: account-service
+  #   ports:
+  #     - "8082:8082"
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=dev
+  #     - EUREKA_SERVER_HOST=eureka-server
+  #     - SPRING_DATA_REDIS_HOST=redis-shared
+  #     - SPRING_DATA_REDIS_PORT=6379
+  #     # Database connection cho Docker
+  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-account-dev:5432/accountservicedb
+  #     - SPRING_DATASOURCE_USERNAME=postgres
+  #     - SPRING_DATASOURCE_PASSWORD=1111
+  #     # Kafka connection cho Docker (nếu có)
+  #     - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+  #     - API_GATEWAT_URL= 
+  #   depends_on:
+  #     - eureka-server
+  #     - postgres-account
+  #     - redis
+  #   networks:
+  #     - microservice-network
+
+  # postgres-learn:
+  #   image: postgres:15
+  #   container_name: postgres-learn-dev
+  #   ports:
+  #     - "5434:5432"
+  #   environment:
+  #     POSTGRES_DB: learnservicedb
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: 1111
+  #   volumes:
+  #     - postgres_learn_data:/var/lib/postgresql/data
+  #   networks:
+  #     - microservice-network
+
+  # learn-service:
+  #   image: learn-service:latest
+  #   container_name: learn-service
+  #   ports:
+  #     - "8084:8084"
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=dev
+  #     - EUREKA_SERVER_HOST=eureka-server
+  #     # Database connection cho Docker
+  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-learn-dev:5432/learnservicedb
+  #     - SPRING_DATASOURCE_USERNAME=postgres
+  #     - SPRING_DATASOURCE_PASSWORD=1111
+  #     # Kafka connection cho Docker (nếu có)
+  #     - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+  #     - API_GATEWAT_URL= 
+  #   depends_on:
+  #     - eureka-server
+  #     - postgres-learn
+  #   networks:
+  #     - microservice-network
+
+  # # Stats Service Database
+  # postgres-stats:
+  #   image: postgres:15
+  #   container_name: postgres-stats-dev
+  #   ports:
+  #     - "5435:5432"
+  #   environment:
+  #     POSTGRES_DB: statsservicedb
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: 1111
+  #   volumes:
+  #     - postgres_stats_data:/var/lib/postgresql/data
+  #   networks:
+  #     - microservice-network
+
+  # stats-service:
+  #   image: stats-service:latest
+  #   container_name: stats-service
+  #   ports:
+  #     - "8086:8086"
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=dev
+  #     - EUREKA_SERVER_HOST=eureka-server
+  #     # Database connection cho Docker
+  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-stats-dev:5432/statsservicedb
+  #     - SPRING_DATASOURCE_USERNAME=postgres
+  #     - SPRING_DATASOURCE_PASSWORD=1111
+  #     # Kafka connection cho Docker (nếu có)
+  #     - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+  #     - API_GATEWAT_URL= 
+  #   depends_on:
+  #     - eureka-server
+  #     - postgres-stats
+  #   networks:
+  #     - microservice-network
+  
+
+volumes:
+  redis_data:
+  postgres_account_data:
+  # postgres_learn_data:
+  # postgres_stats_data:
+  # kafka_shared_data:
+
+networks:
+  microservice-network:
+    driver: bridge
+    name: microservice-network
+
+    

@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        - id: account-oauth2
+          uri: lb://account-service
+          predicates:
+            - Path=/oauth2/**, /login/oauth2/**
+        - id: diagram-websocket
+          uri: lb:ws://react-flow-be
+          predicates:
+            - Path=/ws/**
+        - id: account
+          uri: lb://account-service
+          predicates:
+            - Path=/account/**
+        - id: diagram
+          uri: lb://react-flow-be
+          predicates:
+            - Path=/api/**
+        - id: gateway-api
+          uri: http://localhost:8080
+          predicates:
+            - Path=/api/**
+        - id: account-docs
+          uri: lb://account-service
+          predicates:
+            - Path=/account-service/v3/api-docs
+          filters:
+            - StripPrefix=1
+        - id: chatbot-service
+          uri: ${CHATBOT_URI:http://localhost:8000}
+          predicates:
+            - Path=/**
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+  output:
+    ansi:
+      enabled: ALWAYS
+
+server:
+  port: 8080
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_SERVER_HOST:localhost}:8761/eureka
+    registry-fetch-interval-seconds: 5
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    urls:
+      - name: API Gateway
+        url: /v3/api-docs
+      - name: Account Service
+        url: /account-service/v3/api-docs
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG

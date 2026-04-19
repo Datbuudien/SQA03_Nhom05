@@ -1,0 +1,22 @@
+version: "3.8"
+services:
+  account-service:
+    image: account-service:latest 
+    container_name: account-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=staging
+      - EUREKA_SERVER_HOST=eureka-server
+      - DB_HOST=postgres-account-dev
+      - DB_NAME=accountservicedb
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=1111
+      - KAFKA_BOOTSTRAP_SERVERS=kafka-shared:9092
+    networks:
+      - microservice-network
+
+networks:
+  microservice-network:
+    external: true
+    name: microservice-network

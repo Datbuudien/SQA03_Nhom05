@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  chatbot-api:
+    build: .
+    container_name: database-chatbot-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=mysql-diagram
+      - DB_PORT=3306
+      - DB_NAME=schema_chatbot
+      - DB_USER=root
+      - DB_PASSWORD=1111
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - diagram-network
+
+networks:
+  diagram-network:
+    external: true
+    name: diagram-network

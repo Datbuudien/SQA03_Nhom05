@@ -1,0 +1,119 @@
+services:
+  eureka-server:
+    image: nghhie/eureka-server:latest
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_HOSTNAME=eureka-server
+    networks:
+      - diagram-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-shared
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - diagram-network
+
+  api-gateway:
+    build:
+      context: ../api-gateway
+      dockerfile: Dockerfile
+    image: api-gateway:latest
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - EUREKA_SERVER_HOST=eureka-server
+      - SPRING_DATA_REDIS_HOST=redis-shared
+      - SPRING_DATA_REDIS_PORT=6379
+      - CHATBOT_URI=http://database-chatbot-api:8000
+    depends_on:
+      - eureka-server
+      - redis
+    networks:
+      - diagram-network
+
+  account-service:
+    build:
+      context: ../account-service
+      dockerfile: Dockerfile
+    image: account-service:latest
+    container_name: account-service
+    ports:
+      - "8082:8082"
+    environment:
+      - JAVA_OPTS=-Xmx384m -Xms128m -Duser.timezone=Asia/Ho_Chi_Minh
+      - TZ=Asia/Ho_Chi_Minh
+      - SPRING_PROFILES_ACTIVE=dev
+      - EUREKA_SERVER_HOST=eureka-server
+      - SPRING_DATA_REDIS_HOST=redis-shared
+      - SPRING_DATA_REDIS_PORT=6379
+    depends_on:
+      - eureka-server
+      - mysql-diagram
+      - redis
+    networks:
+      - diagram-network
+
+  react-flow-be:
+    build:
+      context: ../react-flow-be
+      dockerfile: Dockerfile
+    image: react-flow-be:latest
+    container_name: react-flow-be
+    ports:
+      - "8085:8085"
+    environment:
+      - JAVA_OPTS=-Xmx384m -Xms128m -Duser.timezone=Asia/Ho_Chi_Minh
+      - TZ=Asia/Ho_Chi_Minh
+      - EUREKA_SERVER_HOST=eureka-server
+    depends_on:
+      - eureka-server
+      - mysql-diagram
+    networks:
+      - diagram-network
+
+  mysql-diagram:
+    image: mysql:8
+    container_name: mysql-diagram
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 1111
+      MYSQL_DATABASE: schema_visualizer
+    volumes:
+      - mysql_diagram_data:/var/lib/mysql
+    networks:
+      - diagram-network
+
+  react-flow:
+    build:
+      context: ../react-flow
+      dockerfile: Dockerfile
+    image: react-flow:latest
+    container_name: react-flow
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api-gateway
+      - react-flow-be
+    networks:
+      - diagram-network
+
+volumes:
+  redis_data:
+  mysql_diagram_data:
+  postgres_account_data:
+
+networks:
+  diagram-network:
+    driver: bridge
+    name: diagram-network
