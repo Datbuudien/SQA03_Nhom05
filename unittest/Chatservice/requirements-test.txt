@@ -1,0 +1,7 @@
+pytest==7.4.0
+pytest-cov==4.1.0
+flask==3.0.0
+requests==2.31.0
+mysql-connector-python==8.1.0
+transformers==4.35.0
+python-dotenv==1.0.0
