@@ -219,7 +219,7 @@ public class TestDiagramManagementService {
 
         assertDoesNotThrow(() -> diagramManagementService.permanentlyDeleteDiagram(diagramId, ownerUsername));
 
-        verify(diagramRepository).deleteById(diagramId);
+        verify(diagramRepository).delete(validDiagram);
     }
 
     @Test
@@ -288,7 +288,6 @@ public class TestDiagramManagementService {
     @DisplayName("isOwner_testChuan1 - User is owner returns true")
     public void isOwner_testChuan1() {
         // Standard case: user is owner
-        when(diagramRepository.findById(diagramId)).thenReturn(Optional.of(validDiagram));
         when(collaborationRepository.findByDiagramIdAndType(diagramId, Collaboration.CollaborationType.OWNER))
                 .thenReturn(Optional.of(ownerCollaboration));
 
@@ -301,7 +300,6 @@ public class TestDiagramManagementService {
     @DisplayName("isOwner_ngoaile1 - User is not owner returns false")
     public void isOwner_ngoaile1() {
         // Error case: user is not owner
-        when(diagramRepository.findById(diagramId)).thenReturn(Optional.of(validDiagram));
         when(collaborationRepository.findByDiagramIdAndType(diagramId, Collaboration.CollaborationType.OWNER))
                 .thenReturn(Optional.of(ownerCollaboration));
 
@@ -313,8 +311,9 @@ public class TestDiagramManagementService {
     @Test
     @DisplayName("isOwner_ngoaile2 - Diagram not found returns false")
     public void isOwner_ngoaile2() {
-        // Error case: diagram not found
-        when(diagramRepository.findById(diagramId)).thenReturn(Optional.empty());
+        // Error case: owner collaboration not found
+        when(collaborationRepository.findByDiagramIdAndType(diagramId, Collaboration.CollaborationType.OWNER))
+                .thenReturn(Optional.empty());
 
         boolean result = diagramManagementService.isOwner(diagramId, ownerUsername);
 
@@ -325,7 +324,6 @@ public class TestDiagramManagementService {
     @DisplayName("isOwner_ngoaile3 - Owner collaboration not found returns false")
     public void isOwner_ngoaile3() {
         // Error case: no owner collaboration
-        when(diagramRepository.findById(diagramId)).thenReturn(Optional.of(validDiagram));
         when(collaborationRepository.findByDiagramIdAndType(diagramId, Collaboration.CollaborationType.OWNER))
                 .thenReturn(Optional.empty());
 
@@ -340,7 +338,7 @@ public class TestDiagramManagementService {
     @DisplayName("getTrashCount_testChuan1 - Get trash count for user")
     public void getTrashCount_testChuan1() {
         // Standard case: user has diagrams in trash
-        when(diagramRepository.countByIsDeletedTrueAndDeletedAtBefore(any(LocalDateTime.class)))
+        when(diagramRepository.countByIsDeleted(true))
                 .thenReturn(3L);
 
         long result = diagramManagementService.getTrashCount(ownerUsername);
@@ -352,7 +350,7 @@ public class TestDiagramManagementService {
     @DisplayName("getTrashCount_testChuan2 - No diagrams in trash returns zero")
     public void getTrashCount_testChuan2() {
         // Standard case: user has no diagrams in trash
-        when(diagramRepository.countByIsDeletedTrueAndDeletedAtBefore(any(LocalDateTime.class)))
+        when(diagramRepository.countByIsDeleted(true))
                 .thenReturn(0L);
 
         long result = diagramManagementService.getTrashCount(ownerUsername);
@@ -365,8 +363,8 @@ public class TestDiagramManagementService {
     @Test
     @DisplayName("getDaysUntilAutoDelete_testChuan1 - Calculate days until auto-delete")
     public void getDaysUntilAutoDelete_testChuan1() {
-        // Standard case: diagram was deleted 6 days ago
-        LocalDateTime deletedAt = LocalDateTime.now().minusDays(6);
+        // Standard case: diagram was deleted 1 day ago (7-day auto-delete)
+        LocalDateTime deletedAt = LocalDateTime.now().minusDays(1);
         validDiagram.setIsDeleted(true);
         validDiagram.setDeletedAt(deletedAt);
 
@@ -375,15 +373,15 @@ public class TestDiagramManagementService {
         Long result = diagramManagementService.getDaysUntilAutoDelete(diagramId);
 
         assertNotNull(result);
-        // Should have positive days remaining (less than 30)
-        assertTrue(result > 0 && result < AUTO_DELETE_DAYS);
+        // Should have positive days remaining (less than 7)
+        assertTrue(result > 0 && result <= 7);
     }
 
     @Test
     @DisplayName("getDaysUntilAutoDelete_testChuan2 - Already expired returns zero")
     public void getDaysUntilAutoDelete_testChuan2() {
-        // Standard case: diagram deleted more than AUTO_DELETE_DAYS ago
-        LocalDateTime deletedAt = LocalDateTime.now().minusDays(40);
+        // Standard case: diagram deleted more than 7 days ago
+        LocalDateTime deletedAt = LocalDateTime.now().minusDays(8);
         validDiagram.setIsDeleted(true);
         validDiagram.setDeletedAt(deletedAt);
 
@@ -445,7 +443,6 @@ public class TestDiagramManagementService {
     @DisplayName("integration_testChuan2 - Check owner before deletion")
     public void integration_testChuan2() {
         // Integration test: verify owner before deleting
-        when(diagramRepository.findById(diagramId)).thenReturn(Optional.of(validDiagram));
         when(collaborationRepository.findByDiagramIdAndType(diagramId, Collaboration.CollaborationType.OWNER))
                 .thenReturn(Optional.of(ownerCollaboration));
 

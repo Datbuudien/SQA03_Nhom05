@@ -248,7 +248,7 @@ public class TestCollaborationService {
 
         assertDoesNotThrow(() -> collaborationService.removeCollaborator(2L));
 
-        verify(collaborationRepository).deleteById(2L);
+        verify(collaborationRepository).delete(participantCollaboration);
     }
 
     @Test
@@ -269,8 +269,8 @@ public class TestCollaborationService {
     @DisplayName("hasAccess_testChuan1 - User with active collaboration has access")
     public void hasAccess_testChuan1() {
         // Standard case: active user has access
-        when(collaborationRepository.findByDiagramIdAndUsername(diagramId, ownerUsername))
-                .thenReturn(Optional.of(ownerCollaboration));
+        when(collaborationRepository.hasAccess(diagramId, ownerUsername))
+                .thenReturn(true);
 
         boolean result = collaborationService.hasAccess(diagramId, ownerUsername);
 
@@ -281,8 +281,8 @@ public class TestCollaborationService {
     @DisplayName("hasAccess_testChuan2 - User without collaboration has no access")
     public void hasAccess_testChuan2() {
         // Standard case: user not in collaboration
-        when(collaborationRepository.findByDiagramIdAndUsername(diagramId, "unknown_user"))
-                .thenReturn(Optional.empty());
+        when(collaborationRepository.hasAccess(diagramId, "unknown_user"))
+                .thenReturn(false);
 
         boolean result = collaborationService.hasAccess(diagramId, "unknown_user");
 
@@ -293,9 +293,8 @@ public class TestCollaborationService {
     @DisplayName("hasAccess_ngoaile1 - Inactive collaboration has no access")
     public void hasAccess_ngoaile1() {
         // Error case: collaboration is inactive
-        participantCollaboration.setIsActive(false);
-        when(collaborationRepository.findByDiagramIdAndUsername(diagramId, participantUsername))
-                .thenReturn(Optional.of(participantCollaboration));
+        when(collaborationRepository.hasAccess(diagramId, participantUsername))
+                .thenReturn(false);
 
         boolean result = collaborationService.hasAccess(diagramId, participantUsername);
 
@@ -321,7 +320,7 @@ public class TestCollaborationService {
     @DisplayName("getUserCollaboration_ngoaile1 - User collaboration not found throws exception")
     public void getUserCollaboration_ngoaile1() {
         // Error case: collaboration not found
-        when(collaborationRepository.findByDiagramIdAndUsername(diagramId, "unknown_user"))
+        when(collaborationRepository.findActiveCollaboration(diagramId, "unknown_user"))
                 .thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, 
@@ -489,15 +488,15 @@ public class TestCollaborationService {
         assertNotNull(addResult);
 
         // Check access
-        when(collaborationRepository.findByDiagramIdAndUsername(diagramId, newUsername))
-                .thenReturn(Optional.of(newCollaboration));
+        when(collaborationRepository.hasAccess(diagramId, newUsername))
+                .thenReturn(true);
         boolean hasAccess = collaborationService.hasAccess(diagramId, newUsername);
         assertTrue(hasAccess);
 
         // Remove collaborator
         when(collaborationRepository.findById(3L)).thenReturn(Optional.of(newCollaboration));
         assertDoesNotThrow(() -> collaborationService.removeCollaborator(3L));
-        verify(collaborationRepository).deleteById(3L);
+        verify(collaborationRepository).delete(newCollaboration);
     }
 
     @Test
@@ -508,8 +507,10 @@ public class TestCollaborationService {
         collaborations.add(ownerCollaboration);
         collaborations.add(participantCollaboration);
 
-        when(diagramRepository.findById(diagramId)).thenReturn(Optional.of(validDiagram));
+        when(diagramRepository.existsById(diagramId)).thenReturn(true);
         when(collaborationRepository.findByDiagramId(diagramId)).thenReturn(collaborations);
+        when(collaborationRepository.findByDiagramIdAndType(diagramId, Collaboration.CollaborationType.OWNER))
+                .thenReturn(Optional.of(ownerCollaboration));
 
         List<CollaborationDTO> result = collaborationService.getCollaborations(diagramId);
         assertEquals(2, result.size());
