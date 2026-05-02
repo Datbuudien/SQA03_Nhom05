@@ -90,10 +90,6 @@ public class DiagramManagementServiceTest {
 
     @Test
     public void UT_DMS_001_softDeleteDiagramSuccess() {
-        log.info("========================================");
-        log.info("[UT_DMS_001] BẮT ĐẦU: Soft delete diagram - thành công");
-        log.info("[UT_DMS_001] Input: diagramId=1, username='owner_user'");
-
         // Arrange: Setup mocks
         when(diagramRepository.findById(1L)).thenReturn(Optional.of(sampleDiagram));
         when(collaborationRepository.findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER))
@@ -102,7 +98,6 @@ public class DiagramManagementServiceTest {
             Diagram diagram = invocation.getArgument(0);
             assertTrue(diagram.getIsDeleted(), "Diagram should be marked as deleted");
             assertNotNull(diagram.getDeletedAt(), "DeletedAt should be set");
-            log.info("[UT_DMS_001] Diagram được lưu: isDeleted=true, deletedAt={}", diagram.getDeletedAt());
             return diagram;
         });
 
@@ -114,16 +109,11 @@ public class DiagramManagementServiceTest {
         verify(collaborationRepository, times(1)).findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER);
         verify(diagramRepository, times(1)).save(any(Diagram.class));
 
-        log.info("[UT_DMS_001] KẾT QUẢ: PASSED - Diagram được soft delete thành công");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_001] response={}", sampleDiagram);
     }
 
     @Test
     public void UT_DMS_002_softDeleteDiagramNotFound() {
-        log.info("========================================");
-        log.info("[UT_DMS_002] BẮT ĐẦU: Soft delete diagram - diagram không tồn tại");
-        log.info("[UT_DMS_002] Input: diagramId=999 (không tồn tại)");
-
         // Arrange: Setup mocks
         when(diagramRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -132,17 +122,11 @@ public class DiagramManagementServiceTest {
             diagramManagementService.softDeleteDiagram(999L, "owner_user");
         });
 
-        log.info("[UT_DMS_002] Exception caught: {}", exception.getMessage());
-        log.info("[UT_DMS_002] KẾT QUẢ: PASSED - EntityNotFoundException được ném");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_002] exception={}", exception.getMessage());
     }
 
     @Test
     public void UT_DMS_003_softDeleteDiagramNotOwner() {
-        log.info("========================================");
-        log.info("[UT_DMS_003] BẮT ĐẦU: Soft delete diagram - user không phải owner");
-        log.info("[UT_DMS_003] Input: diagramId=1, username='not_owner' (không phải owner)");
-
         // Arrange: Setup mocks
         when(diagramRepository.findById(1L)).thenReturn(Optional.of(sampleDiagram));
         when(collaborationRepository.findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER))
@@ -153,18 +137,12 @@ public class DiagramManagementServiceTest {
             diagramManagementService.softDeleteDiagram(1L, "not_owner");
         });
 
-        log.info("[UT_DMS_003] Exception caught: {}", exception.getMessage());
         assertTrue(exception.getMessage().contains("Only owner can delete"), "Should mention owner requirement");
-        log.info("[UT_DMS_003] KẾT QUẢ: PASSED - IllegalStateException được ném");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_003] exception={}", exception.getMessage());
     }
 
     @Test
     public void UT_DMS_004_softDeleteDiagramNoOwner() {
-        log.info("========================================");
-        log.info("[UT_DMS_004] BẮT ĐẦU: Soft delete diagram - diagram không có owner");
-        log.info("[UT_DMS_004] Input: diagramId=1, không có owner");
-
         // Arrange: Setup mocks
         when(diagramRepository.findById(1L)).thenReturn(Optional.of(sampleDiagram));
         when(collaborationRepository.findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER))
@@ -175,19 +153,13 @@ public class DiagramManagementServiceTest {
             diagramManagementService.softDeleteDiagram(1L, "owner_user");
         });
 
-        log.info("[UT_DMS_004] Exception caught: {}", exception.getMessage());
-        log.info("[UT_DMS_004] KẾT QUẢ: PASSED - IllegalStateException được ném");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_004] exception={}", exception.getMessage());
     }
 
     // ======================== restoreDiagram() - 4 tests ========================
 
     @Test
     public void UT_DMS_005_restoreDiagramSuccess() {
-        log.info("========================================");
-        log.info("[UT_DMS_005] BẮT ĐẦU: Restore diagram từ trash - thành công");
-        log.info("[UT_DMS_005] Input: diagramId=2, username='owner_user'");
-
         // Arrange: Setup mocks
         Collaboration trash_owner = new Collaboration();
         trash_owner.setUsername("owner_user");
@@ -200,7 +172,6 @@ public class DiagramManagementServiceTest {
             Diagram diagram = invocation.getArgument(0);
             assertFalse(diagram.getIsDeleted(), "Diagram should not be marked as deleted");
             assertNull(diagram.getDeletedAt(), "DeletedAt should be null");
-            log.info("[UT_DMS_005] Diagram được lưu: isDeleted=false, deletedAt=null");
             return diagram;
         });
 
@@ -212,16 +183,11 @@ public class DiagramManagementServiceTest {
         verify(collaborationRepository, times(1)).findByDiagramIdAndType(2L, Collaboration.CollaborationType.OWNER);
         verify(diagramRepository, times(1)).save(any(Diagram.class));
 
-        log.info("[UT_DMS_005] KẾT QUẢ: PASSED - Diagram được restore thành công");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_005] response={}", sampleDiagramInTrash);
     }
 
     @Test
     public void UT_DMS_006_restoreDiagramNotFound() {
-        log.info("========================================");
-        log.info("[UT_DMS_006] BẮT ĐẦU: Restore diagram - diagram không tồn tại");
-        log.info("[UT_DMS_006] Input: diagramId=999 (không tồn tại)");
-
         // Arrange: Setup mocks
         when(diagramRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -230,17 +196,11 @@ public class DiagramManagementServiceTest {
             diagramManagementService.restoreDiagram(999L, "owner_user");
         });
 
-        log.info("[UT_DMS_006] Exception caught: {}", exception.getMessage());
-        log.info("[UT_DMS_006] KẾT QUẢ: PASSED - EntityNotFoundException được ném");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_006] exception={}", exception.getMessage());
     }
 
     @Test
     public void UT_DMS_007_restoreDiagramNotOwner() {
-        log.info("========================================");
-        log.info("[UT_DMS_007] BẮT ĐẦU: Restore diagram - user không phải owner");
-        log.info("[UT_DMS_007] Input: diagramId=2, username='not_owner'");
-
         // Arrange: Setup mocks
         when(diagramRepository.findById(2L)).thenReturn(Optional.of(sampleDiagramInTrash));
         when(collaborationRepository.findByDiagramIdAndType(2L, Collaboration.CollaborationType.OWNER))
@@ -251,17 +211,11 @@ public class DiagramManagementServiceTest {
             diagramManagementService.restoreDiagram(2L, "not_owner");
         });
 
-        log.info("[UT_DMS_007] Exception caught: {}", exception.getMessage());
-        log.info("[UT_DMS_007] KẾT QUẢ: PASSED - IllegalStateException được ném");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_007] exception={}", exception.getMessage());
     }
 
     @Test
     public void UT_DMS_008_restoreDiagramNoOwner() {
-        log.info("========================================");
-        log.info("[UT_DMS_008] BẮT ĐẦU: Restore diagram - diagram không có owner");
-        log.info("[UT_DMS_008] Input: diagramId=2, không có owner");
-
         // Arrange: Setup mocks
         when(diagramRepository.findById(2L)).thenReturn(Optional.of(sampleDiagramInTrash));
         when(collaborationRepository.findByDiagramIdAndType(2L, Collaboration.CollaborationType.OWNER))
@@ -272,19 +226,13 @@ public class DiagramManagementServiceTest {
             diagramManagementService.restoreDiagram(2L, "owner_user");
         });
 
-        log.info("[UT_DMS_008] Exception caught: {}", exception.getMessage());
-        log.info("[UT_DMS_008] KẾT QUẢ: PASSED - IllegalStateException được ném");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_008] exception={}", exception.getMessage());
     }
 
     // ======================== permanentlyDeleteDiagram() - 5 tests ========================
 
     @Test
     public void UT_DMS_009_permanentlyDeleteDiagramSuccess() {
-        log.info("========================================");
-        log.info("[UT_DMS_009] BẮT ĐẦU: Permanently delete diagram - thành công");
-        log.info("[UT_DMS_009] Input: diagramId=2, username='owner_user' (diagram in trash)");
-
         // Arrange: Setup mocks
         Collaboration trash_owner = new Collaboration();
         trash_owner.setUsername("owner_user");
@@ -303,16 +251,11 @@ public class DiagramManagementServiceTest {
         verify(collaborationRepository, times(1)).findByDiagramIdAndType(2L, Collaboration.CollaborationType.OWNER);
         verify(diagramRepository, times(1)).delete(sampleDiagramInTrash);
 
-        log.info("[UT_DMS_009] KẾT QUẢ: PASSED - Diagram được permanently delete thành công");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_009] response=deleted");
     }
 
     @Test
     public void UT_DMS_010_permanentlyDeleteDiagramNotFound() {
-        log.info("========================================");
-        log.info("[UT_DMS_010] BẮT ĐẦU: Permanently delete diagram - diagram không tồn tại");
-        log.info("[UT_DMS_010] Input: diagramId=999 (không tồn tại)");
-
         // Arrange: Setup mocks
         when(diagramRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -321,17 +264,11 @@ public class DiagramManagementServiceTest {
             diagramManagementService.permanentlyDeleteDiagram(999L, "owner_user");
         });
 
-        log.info("[UT_DMS_010] Exception caught: {}", exception.getMessage());
-        log.info("[UT_DMS_010] KẾT QUẢ: PASSED - EntityNotFoundException được ném");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_010] exception={}", exception.getMessage());
     }
 
     @Test
     public void UT_DMS_011_permanentlyDeleteDiagramNotOwner() {
-        log.info("========================================");
-        log.info("[UT_DMS_011] BẮT ĐẦU: Permanently delete diagram - user không phải owner");
-        log.info("[UT_DMS_011] Input: diagramId=2, username='not_owner'");
-
         // Arrange: Setup mocks
         when(diagramRepository.findById(2L)).thenReturn(Optional.of(sampleDiagramInTrash));
         when(collaborationRepository.findByDiagramIdAndType(2L, Collaboration.CollaborationType.OWNER))
@@ -342,17 +279,11 @@ public class DiagramManagementServiceTest {
             diagramManagementService.permanentlyDeleteDiagram(2L, "not_owner");
         });
 
-        log.info("[UT_DMS_011] Exception caught: {}", exception.getMessage());
-        log.info("[UT_DMS_011] KẾT QUẢ: PASSED - IllegalStateException được ném");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_011] exception={}", exception.getMessage());
     }
 
     @Test
     public void UT_DMS_012_permanentlyDeleteDiagramNotInTrash() {
-        log.info("========================================");
-        log.info("[UT_DMS_012] BẮT ĐẦU: Permanently delete diagram - diagram không trong trash");
-        log.info("[UT_DMS_012] Input: diagramId=1 (not deleted, isDeleted=false)");
-
         // Arrange: Setup mocks
         when(diagramRepository.findById(1L)).thenReturn(Optional.of(sampleDiagram));
         when(collaborationRepository.findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER))
@@ -363,18 +294,12 @@ public class DiagramManagementServiceTest {
             diagramManagementService.permanentlyDeleteDiagram(1L, "owner_user");
         });
 
-        log.info("[UT_DMS_012] Exception caught: {}", exception.getMessage());
         assertTrue(exception.getMessage().contains("in trash"), "Should mention trash requirement");
-        log.info("[UT_DMS_012] KẾT QUẢ: PASSED - IllegalStateException được ném");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_012] exception={}", exception.getMessage());
     }
 
     @Test
     public void UT_DMS_013_permanentlyDeleteDiagramNoOwner() {
-        log.info("========================================");
-        log.info("[UT_DMS_013] BẮT ĐẦU: Permanently delete diagram - diagram không có owner");
-        log.info("[UT_DMS_013] Input: diagramId=2, không có owner");
-
         // Arrange: Setup mocks
         when(diagramRepository.findById(2L)).thenReturn(Optional.of(sampleDiagramInTrash));
         when(collaborationRepository.findByDiagramIdAndType(2L, Collaboration.CollaborationType.OWNER))
@@ -385,19 +310,13 @@ public class DiagramManagementServiceTest {
             diagramManagementService.permanentlyDeleteDiagram(2L, "owner_user");
         });
 
-        log.info("[UT_DMS_013] Exception caught: {}", exception.getMessage());
-        log.info("[UT_DMS_013] KẾT QUẢ: PASSED - IllegalStateException được ném");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_013] exception={}", exception.getMessage());
     }
 
     // ======================== isOwner() - 2 tests ========================
 
     @Test
     public void UT_DMS_014_isOwnerTrue() {
-        log.info("========================================");
-        log.info("[UT_DMS_014] BẮT ĐẦU: Check is owner - user là owner");
-        log.info("[UT_DMS_014] Input: diagramId=1, username='owner_user'");
-
         // Arrange: Setup mocks
         when(collaborationRepository.findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER))
                 .thenReturn(Optional.of(ownerCollaboration));
@@ -409,16 +328,11 @@ public class DiagramManagementServiceTest {
         assertTrue(result, "Should return true for owner");
         verify(collaborationRepository, times(1)).findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER);
 
-        log.info("[UT_DMS_014] KẾT QUẢ: PASSED - Trả về true");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_014] response={}", result);
     }
 
     @Test
     public void UT_DMS_015_isOwnerFalse() {
-        log.info("========================================");
-        log.info("[UT_DMS_015] BẮT ĐẦU: Check is owner - user không phải owner");
-        log.info("[UT_DMS_015] Input: diagramId=1, username='not_owner'");
-
         // Arrange: Setup mocks
         when(collaborationRepository.findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER))
                 .thenReturn(Optional.of(ownerCollaboration));
@@ -430,16 +344,11 @@ public class DiagramManagementServiceTest {
         assertFalse(result, "Should return false for non-owner");
         verify(collaborationRepository, times(1)).findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER);
 
-        log.info("[UT_DMS_015] KẾT QUẢ: PASSED - Trả về false");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_015] response={}", result);
     }
 
     @Test
     public void UT_DMS_016_isOwnerNoOwner() {
-        log.info("========================================");
-        log.info("[UT_DMS_016] BẮT ĐẦU: Check is owner - diagram không có owner");
-        log.info("[UT_DMS_016] Input: diagramId=1, không có owner");
-
         // Arrange: Setup mocks
         when(collaborationRepository.findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER))
                 .thenReturn(Optional.empty());
@@ -451,18 +360,13 @@ public class DiagramManagementServiceTest {
         assertFalse(result, "Should return false when no owner exists");
         verify(collaborationRepository, times(1)).findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER);
 
-        log.info("[UT_DMS_016] KẾT QUẢ: PASSED - Trả về false");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_016] response={}", result);
     }
 
     // ======================== getTrashCount() - 2 tests ========================
 
     @Test
     public void UT_DMS_017_getTrashCountWithData() {
-        log.info("========================================");
-        log.info("[UT_DMS_017] BẮT ĐẦU: Get trash count - có dữ liệu");
-        log.info("[UT_DMS_017] Input: username='owner_user'");
-
         // Arrange: Setup mocks
         when(diagramRepository.countByIsDeleted(true)).thenReturn(5L);
 
@@ -473,16 +377,11 @@ public class DiagramManagementServiceTest {
         assertEquals(5L, result, "Should return count of deleted diagrams");
         verify(diagramRepository, times(1)).countByIsDeleted(true);
 
-        log.info("[UT_DMS_017] KẾT QUẢ: PASSED - Trả về 5");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_017] response={}", result);
     }
 
     @Test
     public void UT_DMS_018_getTrashCountEmpty() {
-        log.info("========================================");
-        log.info("[UT_DMS_018] BẮT ĐẦU: Get trash count - trash trống");
-        log.info("[UT_DMS_018] Input: username='owner_user', trash empty");
-
         // Arrange: Setup mocks
         when(diagramRepository.countByIsDeleted(true)).thenReturn(0L);
 
@@ -493,18 +392,13 @@ public class DiagramManagementServiceTest {
         assertEquals(0L, result, "Should return 0 when trash is empty");
         verify(diagramRepository, times(1)).countByIsDeleted(true);
 
-        log.info("[UT_DMS_018] KẾT QUẢ: PASSED - Trả về 0");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_018] response={}", result);
     }
 
     // ======================== getDaysUntilAutoDelete() - 4 tests ========================
 
     @Test
     public void UT_DMS_019_getDaysUntilAutoDeleteWithDaysRemaining() {
-        log.info("========================================");
-        log.info("[UT_DMS_019] BẮT ĐẦU: Get days until auto delete - còn ngày");
-        log.info("[UT_DMS_019] Input: diagramId=2, deletedAt=3 days ago (4 days remaining)");
-
         // Arrange: Setup mocks - deleted 3 days ago, so 4 days remaining (7 days total)
         Diagram diagramWithDaysRemaining = new Diagram();
         diagramWithDaysRemaining.setId(2L);
@@ -522,16 +416,11 @@ public class DiagramManagementServiceTest {
         assertTrue(result >= 3 && result <= 5, "Should return approximately 4 days (3-5 range to account for execution time)");
         verify(diagramRepository, times(1)).findById(2L);
 
-        log.info("[UT_DMS_019] KẾT QUẢ: PASSED - Trả về {} ngày", result);
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_019] response={}", result);
     }
 
     @Test
     public void UT_DMS_020_getDaysUntilAutoDeleteExpired() {
-        log.info("========================================");
-        log.info("[UT_DMS_020] BẮT ĐẦU: Get days until auto delete - đã hết hạn");
-        log.info("[UT_DMS_020] Input: diagramId=2, deletedAt=8 days ago (expired)");
-
         // Arrange: Setup mocks - deleted 8 days ago, so auto-delete date has passed
         Diagram expiredDiagram = new Diagram();
         expiredDiagram.setId(2L);
@@ -548,16 +437,11 @@ public class DiagramManagementServiceTest {
         assertEquals(0L, result, "Should return 0 when already expired");
         verify(diagramRepository, times(1)).findById(2L);
 
-        log.info("[UT_DMS_020] KẾT QUẢ: PASSED - Trả về 0 (đã hết hạn)");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_020] response={}", result);
     }
 
     @Test
     public void UT_DMS_021_getDaysUntilAutoDeleteNotDeleted() {
-        log.info("========================================");
-        log.info("[UT_DMS_021] BẮT ĐẦU: Get days until auto delete - diagram không bị xóa");
-        log.info("[UT_DMS_021] Input: diagramId=1 (isDeleted=false)");
-
         // Arrange: Setup mocks
         when(diagramRepository.findById(1L)).thenReturn(Optional.of(sampleDiagram));
 
@@ -568,16 +452,11 @@ public class DiagramManagementServiceTest {
         assertNull(result, "Should return null for non-deleted diagram");
         verify(diagramRepository, times(1)).findById(1L);
 
-        log.info("[UT_DMS_021] KẾT QUẢ: PASSED - Trả về null");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_021] response={}", result);
     }
 
     @Test
     public void UT_DMS_022_getDaysUntilAutoDeleteNotFound() {
-        log.info("========================================");
-        log.info("[UT_DMS_022] BẮT ĐẦU: Get days until auto delete - diagram không tồn tại");
-        log.info("[UT_DMS_022] Input: diagramId=999 (không tồn tại)");
-
         // Arrange: Setup mocks
         when(diagramRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -586,8 +465,6 @@ public class DiagramManagementServiceTest {
             diagramManagementService.getDaysUntilAutoDelete(999L);
         });
 
-        log.info("[UT_DMS_022] Exception caught: {}", exception.getMessage());
-        log.info("[UT_DMS_022] KẾT QUẢ: PASSED - EntityNotFoundException được ném");
-        log.info("[TEARDOWN] Dọn dẹp dữ liệu test, reset mock objects...");
+        log.info("[UT_DMS_022] exception={}", exception.getMessage());
     }
 }

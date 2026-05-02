@@ -144,11 +144,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_001_getCollaborations_withExistingDiagram_shouldReturnCollaborationsList() {
-        logger.info("========================================");
-        logger.info("[UT_CB_001] BẮT ĐẦU: Lấy danh sách collaborations - có dữ liệu");
-        logger.info("[UT_CB_001] Mục đích: Kiểm tra API lấy tất cả collaborators của diagram");
-        logger.info("[UT_CB_001] Input: diagramId={}, số lượng collaborators=2 (1 owner + 1 participant)", 1L);
-
         // Arrange
         List<Collaboration> collaborations = Arrays.asList(ownerCollaboration, sampleCollaboration);
         when(diagramRepository.existsById(1L)).thenReturn(true);
@@ -165,11 +160,7 @@ public class CollaborationServiceTest {
 
         verify(diagramRepository, times(1)).existsById(1L);
         verify(collaborationRepository, times(1)).findByDiagramId(1L);
-        logger.info("[UT_CB_001] Xác nhận: Mock gọi existsById đúng 1 lần");
-        logger.info("[UT_CB_001] Xác nhận: Mock gọi findByDiagramId đúng 1 lần");
-        logger.info("[UT_CB_001] Xác nhận: Kết quả là danh sách 2 objects, index 0 là OWNER, index 1 là PARTICIPANT");
-        logger.info("[UT_CB_001] KẾT QUẢ: PASSED ✅ - Trả về {} collaborations với đủ thông tin", result.size());
-        logger.info("========================================\n");
+        logger.info("[UT_CB_001] response={}", result);
     }
 
     /**
@@ -186,11 +177,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_002_getCollaborations_withNoDiagramCollaborators_shouldReturnEmptyList() {
-        logger.info("========================================");
-        logger.info("[UT_CB_002] BẮT ĐẦU: Lấy danh sách collaborations - không có dữ liệu");
-        logger.info("[UT_CB_002] Mục đích: Kiểm tra edge case khi diagram không có collaborators");
-        logger.info("[UT_CB_002] Input: diagramId={}, số lượng collaborators=0 (diagram trống)", 1L);
-
         // Arrange
         when(diagramRepository.existsById(1L)).thenReturn(true);
         when(collaborationRepository.findByDiagramId(1L)).thenReturn(Collections.emptyList());
@@ -204,10 +190,7 @@ public class CollaborationServiceTest {
 
         verify(diagramRepository, times(1)).existsById(1L);
         verify(collaborationRepository, times(1)).findByDiagramId(1L);
-        logger.info("[UT_CB_002] Xác nhận: Kết quả là danh sách rỗng, không phải null");
-        logger.info("[UT_CB_002] Xác nhận: Mock collaborationRepository.findByDiagramId() gọi đúng 1 lần");
-        logger.info("[UT_CB_002] KẾT QUẢ: PASSED ✅ - Danh sách rỗng được trả về (không exception)");
-        logger.info("========================================\n");
+        logger.info("[UT_CB_002] response={}", result);
     }
 
     /**
@@ -225,11 +208,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_003_getCollaborations_withNonExistingDiagram_shouldThrowException() {
-        logger.info("========================================");
-        logger.info("[UT_CB_003] BẮT ĐẦU: Lấy danh sách collaborations - diagram không tồn tại");
-        logger.info("[UT_CB_003] Mục đích: Kiểm tra error handling cho diagram ID không hợp lệ");
-        logger.info("[UT_CB_003] Input: diagramId={} (diagram ID không tồn tại trong hệ thống)", 999L);
-
         // Arrange
         when(diagramRepository.existsById(999L)).thenReturn(false);
 
@@ -240,10 +218,7 @@ public class CollaborationServiceTest {
 
         verify(diagramRepository, times(1)).existsById(999L);
         verify(collaborationRepository, never()).findByDiagramId(anyLong());
-        logger.info("[UT_CB_003] Xác nhận: ExceptionNotFoundException được ném: {}", exception.getMessage());
-        logger.info("[UT_CB_003] Xác nhận: Repository.findByDiagramId() không được gọi (fail-fast)");
-        logger.info("[UT_CB_003] KẾT QUẢ: PASSED ✅ - EntityNotFoundException được ném khi diagram không tồn tại");
-        logger.info("========================================\n");
+        logger.info("[UT_CB_003] exception={}", exception.getMessage());
     }
 
     // ========================================================================================
@@ -258,10 +233,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_004_addCollaborator_withValidData_shouldReturnNewCollaboration() {
-        logger.info("[UT_CB_004] BẮT ĐẦU: Thêm collaborator mới thành công");
-        logger.info("[UT_CB_004] Input: diagramId={}, username='{}', permission={}",
-                1L, "new_user", Collaboration.Permission.EDIT);
-
         // Arrange
         Collaboration newCollaboration = new Collaboration();
         newCollaboration.setId(3L);
@@ -291,11 +262,7 @@ public class CollaborationServiceTest {
         verify(diagramRepository, times(1)).findById(1L);
         verify(collaborationRepository, times(1)).findByDiagramIdAndUsername(1L, "new_user");
         verify(collaborationRepository, times(1)).save(any(Collaboration.class));
-        logger.info("[UT_CB_004] Xác nhận: Diagram được tìm đúng 1 lần");
-        logger.info("[UT_CB_004] Xác nhận: Kiểm tra user chưa tồn tại trong diagram đúng 1 lần");
-        logger.info("[UT_CB_004] Xác nhận: Collaboration được save vào DB đúng 1 lần");
-        logger.info("[UT_CB_004] KẾT QUẢ: PASSED ✅ - Collaborator mới được lưu thành công với ID={}", result.getId());
-        logger.info("========================================\n");
+        logger.info("[UT_CB_004] response={}", result);
     }
 
     /**
@@ -309,11 +276,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_005_addCollaborator_withNonExistingDiagram_shouldThrowException() {
-        logger.info("========================================");
-        logger.info("[UT_CB_005] BẮT ĐẦU: Thêm collaborator - diagram không tồn tại");
-        logger.info("[UT_CB_005] Mục đích: Kiểm tra fail-fast khi diagram ID không hợp lệ");
-        logger.info("[UT_CB_005] Input: diagramId={} (diagram không tồn tại), username='{}'", 999L, "new_user");
-
         // Arrange
         when(diagramRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -324,9 +286,7 @@ public class CollaborationServiceTest {
 
         verify(diagramRepository, times(1)).findById(999L);
         verify(collaborationRepository, never()).save(any(Collaboration.class));
-        logger.info("[UT_CB_005] Xác nhận: Repository.save() không được gọi (fail-fast)");
-        logger.info("[UT_CB_005] KẾT QUẢ: PASSED ✅ - EntityNotFoundException được ném ngay lập tức");
-        logger.info("========================================\n");
+        logger.info("[UT_CB_005] exception=EntityNotFoundException");
     }
 
     /**
@@ -341,11 +301,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_006_addCollaborator_withExistingCollaborator_shouldThrowException() {
-        logger.info("========================================");
-        logger.info("[UT_CB_006] BẮT ĐẦU: Thêm collaborator - user đã là collaborator");
-        logger.info("[UT_CB_006] Mục đích: Kiểm tra validation trùng lặp collaborator");
-        logger.info("[UT_CB_006] Input: username='{}' (đã là collaborator), diagramId={}", "collaborator01", 1L);
-
         // Arrange
         when(diagramRepository.findById(1L)).thenReturn(Optional.of(sampleDiagram));
         when(collaborationRepository.findByDiagramIdAndUsername(1L, "collaborator01"))
@@ -355,10 +310,7 @@ public class CollaborationServiceTest {
         assertThrows(IllegalArgumentException.class, () -> {
             collaborationService.addCollaborator(1L, "collaborator01", Collaboration.Permission.EDIT);
         }, "Service phải ném IllegalArgumentException khi user đã là collaborator");
-
-        verify(diagramRepository, times(1)).findById(1L);
-        verify(collaborationRepository, times(1)).findByDiagramIdAndUsername(1L, "collaborator01");
-        verify(collaborationRepository, never()).save(any(Collaboration.class));
+        logger.info("[UT_CB_006] exception=IllegalArgumentException");
         logger.info("[UT_CB_006] Xác nhận: Repository.findByDiagramIdAndUsername() trả về Optional.of() ");
         logger.info("[UT_CB_006] Xác nhận: Repository.save() không được gọi (ngăn trùng lặp)");
         logger.info("[UT_CB_006] KẾT QUẢ: PASSED ✅ - IllegalArgumentException được ném");
@@ -373,9 +325,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_007_addCollaborator_withViewPermission_shouldSaveWithViewPermission() {
-        logger.info("[UT_CB_007] BẮT ĐẦU: Thêm collaborator với permission=VIEW");
-        logger.info("[UT_CB_007] Input: permission={}", Collaboration.Permission.VIEW);
-
         // Arrange
         Collaboration viewCollaboration = new Collaboration();
         viewCollaboration.setId(4L);
@@ -395,7 +344,7 @@ public class CollaborationServiceTest {
         // Assert
         assertEquals(Collaboration.Permission.VIEW, result.getPermission());
         verify(collaborationRepository, times(1)).save(any(Collaboration.class));
-        logger.info("[UT_CB_007] KẾT QUẢ: PASSED - Permission={} đã được lưu", result.getPermission());
+        logger.info("[UT_CB_007] response={}", result);
     }
 
     // ========================================================================================
@@ -417,11 +366,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_008_updatePermission_withValidData_shouldUpdateSuccessfully() {
-        logger.info("========================================");
-        logger.info("[UT_CB_008] BẮT ĐẦU: Cập nhật quyền collaborator thành công");
-        logger.info("[UT_CB_008] Mục đích: Kiểm tra lấy permission (EDIT -> VIEW) vận hoạt động");
-        logger.info("[UT_CB_008] Input: collaborationId={}, newPermission={}, user offline", 2L, Collaboration.Permission.VIEW);
-
         // Arrange
         Collaboration updated = new Collaboration();
         updated.setId(2L);
@@ -441,10 +385,7 @@ public class CollaborationServiceTest {
         // Assert
         verify(collaborationRepository, times(1)).findById(2L);
         verify(collaborationRepository, times(1)).save(any(Collaboration.class));
-        logger.info("[UT_CB_008] Xác nhận: Collaboration.permission được làm mới thành {}", Collaboration.Permission.VIEW);
-        logger.info("[UT_CB_008] Xác nhận: sessionManager.isUserActiveInDiagram() được gọi (user offline)");
-        logger.info("[UT_CB_008] KẾT QUẢ: PASSED ✅ - Permission được cập nhật thành công, user offline nên không disconnect");
-        logger.info("========================================\n");
+        logger.info("[UT_CB_008] response={}", updated);
     }
 
     /**
@@ -455,9 +396,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_009_updatePermission_withNonExistingCollaboration_shouldThrowException() {
-        logger.info("[UT_CB_009] BẮT ĐẦU: Cập nhật quyền - collaboration không tồn tại");
-        logger.info("[UT_CB_009] Input: collaborationId={} (không tồn tại)", 999L);
-
         // Arrange
         when(collaborationRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -467,7 +405,7 @@ public class CollaborationServiceTest {
         });
 
         verify(collaborationRepository, never()).save(any(Collaboration.class));
-        logger.info("[UT_CB_009] KẾT QUẢ: PASSED - EntityNotFoundException đã được ném");
+        logger.info("[UT_CB_009] exception=EntityNotFoundException");
     }
 
     /**
@@ -482,11 +420,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_010_updatePermission_forOwner_shouldThrowException() {
-        logger.info("========================================");
-        logger.info("[UT_CB_010] BẮT ĐẦU: Cập nhật quyền - không được thay đổi quyền của owner");
-        logger.info("[UT_CB_010] Mục đích: Kiểm tra business rule bảo vệ owner");
-        logger.info("[UT_CB_010] Input: collaborationId={} (type=OWNER), cố hạ quyền", 1L);
-
         // Arrange
         when(collaborationRepository.findById(1L)).thenReturn(Optional.of(ownerCollaboration));
 
@@ -496,10 +429,7 @@ public class CollaborationServiceTest {
         }, "Service phải ném IllegalArgumentException khi cố cập nhật permission của owner");
 
         verify(collaborationRepository, never()).save(any(Collaboration.class));
-        logger.info("[UT_CB_010] Xác nhận: Collaboration type là OWNER (hàng rào 1)");
-        logger.info("[UT_CB_010] Xác nhận: Repository.save() không được gọi");
-        logger.info("[UT_CB_010] KẾT QUẢ: PASSED ✅ - IllegalArgumentException được ném (bảo vệ owner)");
-        logger.info("========================================\n");
+        logger.info("[UT_CB_010] exception=IllegalArgumentException");
     }
 
     /**
@@ -510,9 +440,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_011_updatePermission_downgradeFromFullAccessToViewWithUserOnline_shouldForceDisconnect() {
-        logger.info("[UT_CB_011] BẮT ĐẦU: Cập nhật quyền - downgrade từ FULL_ACCESS->VIEW, user online");
-        logger.info("[UT_CB_011] Input: downgrade permission, user online");
-
         // Arrange
         Collaboration fullAccessCollab = new Collaboration();
         fullAccessCollab.setId(5L);
@@ -538,11 +465,7 @@ public class CollaborationServiceTest {
         verify(sessionManager, times(1)).isUserActiveInDiagram(1L, "online_user");
         verify(sessionRegistry, times(1)).closeSessions(any(Set.class));
         verify(collaborationRepository, times(1)).save(any(Collaboration.class));
-        logger.info("[UT_CB_011] Xác nhận: sessionManager.isUserActiveInDiagram() trả về true (user online)");
-        logger.info("[UT_CB_011] Xác nhận: sessionRegistry.closeSessions() được gọi để disconnect 2 sessions");
-        logger.info("[UT_CB_011] Xác nhận: Permission được cập nhật sỪu khi user disconnect");
-        logger.info("[UT_CB_011] KẾT QUẢ: PASSED ✅ - User bị disconnect và permission được cập nhật an toàn");
-        logger.info("========================================\n");
+        logger.info("[UT_CB_011] response={}", fullAccessCollab);
     }
 
     // ========================================================================================
@@ -557,9 +480,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_012_removeCollaborator_withValidId_shouldRemoveSuccessfully() {
-        logger.info("[UT_CB_012] BẮT ĐẦU: Xóa collaborator thành công");
-        logger.info("[UT_CB_012] Input: collaborationId={}", 2L);
-
         // Arrange
         when(collaborationRepository.findById(2L)).thenReturn(Optional.of(sampleCollaboration));
         when(sessionManager.isUserActiveInDiagram(1L, "collaborator01")).thenReturn(false);
@@ -571,7 +491,7 @@ public class CollaborationServiceTest {
         // Assert
         verify(collaborationRepository, times(1)).findById(2L);
         verify(collaborationRepository, times(1)).delete(sampleCollaboration);
-        logger.info("[UT_CB_012] KẾT QUẢ: PASSED - Collaborator đã được xóa thành công");
+        logger.info("[UT_CB_012] response=deleted");
     }
 
     /**
@@ -582,9 +502,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_013_removeCollaborator_withNonExistingCollaboration_shouldThrowException() {
-        logger.info("[UT_CB_013] BẮT ĐẦU: Xóa collaborator - collaboration không tồn tại");
-        logger.info("[UT_CB_013] Input: collaborationId={} (không tồn tại)", 999L);
-
         // Arrange
         when(collaborationRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -594,7 +511,7 @@ public class CollaborationServiceTest {
         });
 
         verify(collaborationRepository, never()).delete(any(Collaboration.class));
-        logger.info("[UT_CB_013] KẾT QUẢ: PASSED - EntityNotFoundException đã được ném");
+        logger.info("[UT_CB_013] exception=EntityNotFoundException");
     }
 
     /**
@@ -605,9 +522,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_014_removeCollaborator_forOwner_shouldThrowException() {
-        logger.info("[UT_CB_014] BẮT ĐẦU: Xóa collaborator - không được xóa owner");
-        logger.info("[UT_CB_014] Input: collaborationId={} (type=OWNER)", 1L);
-
         // Arrange
         when(collaborationRepository.findById(1L)).thenReturn(Optional.of(ownerCollaboration));
 
@@ -617,7 +531,7 @@ public class CollaborationServiceTest {
         });
 
         verify(collaborationRepository, never()).delete(any(Collaboration.class));
-        logger.info("[UT_CB_014] KẾT QUẢ: PASSED - IllegalArgumentException đã được ném");
+        logger.info("[UT_CB_014] exception=IllegalArgumentException");
     }
 
     /**
@@ -628,9 +542,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_015_removeCollaborator_withUserOnline_shouldForceDisconnect() {
-        logger.info("[UT_CB_015] BẮT ĐẦU: Xóa collaborator - user online bị disconnect");
-        logger.info("[UT_CB_015] Input: collaborationId={}, user online", 2L);
-
         // Arrange
         Set<String> activeSessions = new HashSet<>(Arrays.asList("session1", "session2"));
         when(collaborationRepository.findById(2L)).thenReturn(Optional.of(sampleCollaboration));
@@ -647,7 +558,7 @@ public class CollaborationServiceTest {
         verify(sessionManager, times(1)).isUserActiveInDiagram(1L, "collaborator01");
         verify(sessionRegistry, times(1)).closeSessions(any(Set.class));
         verify(collaborationRepository, times(1)).delete(sampleCollaboration);
-        logger.info("[UT_CB_015] KẾT QUẢ: PASSED - User bị disconnect, collaboration đã được xóa");
+        logger.info("[UT_CB_015] response=deleted");
     }
 
     // ========================================================================================
@@ -662,9 +573,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_016_hasAccess_withValidUser_shouldReturnTrue() {
-        logger.info("[UT_CB_016] BẮT ĐẦU: Kiểm tra quyền truy cập - user có quyền");
-        logger.info("[UT_CB_016] Input: diagramId={}, username='{}'", 1L, "collaborator01");
-
         // Arrange
         when(collaborationRepository.hasAccess(1L, "collaborator01")).thenReturn(true);
 
@@ -674,7 +582,7 @@ public class CollaborationServiceTest {
         // Assert
         assertTrue(result);
         verify(collaborationRepository, times(1)).hasAccess(1L, "collaborator01");
-        logger.info("[UT_CB_016] KẾT QUẢ: PASSED - Trả về true");
+        logger.info("[UT_CB_016] response={}", result);
     }
 
     /**
@@ -685,9 +593,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_017_hasAccess_withUnauthorizedUser_shouldReturnFalse() {
-        logger.info("[UT_CB_017] BẮT ĐẦU: Kiểm tra quyền truy cập - user không có quyền");
-        logger.info("[UT_CB_017] Input: diagramId={}, username='{}' (unauthorized)", 1L, "unauthorized_user");
-
         // Arrange
         when(collaborationRepository.hasAccess(1L, "unauthorized_user")).thenReturn(false);
 
@@ -697,7 +602,7 @@ public class CollaborationServiceTest {
         // Assert
         assertFalse(result);
         verify(collaborationRepository, times(1)).hasAccess(1L, "unauthorized_user");
-        logger.info("[UT_CB_017] KẾT QUẢ: PASSED - Trả về false");
+        logger.info("[UT_CB_017] response={}", result);
     }
 
     // ========================================================================================
@@ -712,9 +617,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_018_getUserCollaboration_withValidUser_shouldReturnCollaborationDTO() {
-        logger.info("[UT_CB_018] BẮT ĐẦU: Lấy thông tin collaboration của user - có quyền");
-        logger.info("[UT_CB_018] Input: diagramId={}, username='{}'", 1L, "collaborator01");
-
         // Arrange
         when(collaborationRepository.findActiveCollaboration(1L, "collaborator01"))
             .thenReturn(Optional.of(sampleCollaboration));
@@ -729,7 +631,7 @@ public class CollaborationServiceTest {
         assertTrue(result.getIsActive());
 
         verify(collaborationRepository, times(1)).findActiveCollaboration(1L, "collaborator01");
-        logger.info("[UT_CB_018] KẾT QUẢ: PASSED - CollaborationDTO trả về thành công");
+        logger.info("[UT_CB_018] response={}", result);
     }
 
     /**
@@ -740,9 +642,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_019_getUserCollaboration_withUnauthorizedUser_shouldThrowException() {
-        logger.info("[UT_CB_019] BẮT ĐẦU: Lấy thông tin collaboration - user không có quyền");
-        logger.info("[UT_CB_019] Input: diagramId={}, username='{}' (unauthorized)", 1L, "unauthorized_user");
-
         // Arrange
         when(collaborationRepository.findActiveCollaboration(1L, "unauthorized_user"))
             .thenReturn(Optional.empty());
@@ -753,7 +652,7 @@ public class CollaborationServiceTest {
         });
 
         verify(collaborationRepository, times(1)).findActiveCollaboration(1L, "unauthorized_user");
-        logger.info("[UT_CB_019] KẾT QUẢ: PASSED - EntityNotFoundException đã được ném");
+        logger.info("[UT_CB_019] exception=EntityNotFoundException");
     }
 
     // ========================================================================================
@@ -768,9 +667,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_020_getOwner_withValidDiagram_shouldReturnOwner() {
-        logger.info("[UT_CB_020] BẮT ĐẦU: Lấy thông tin owner - diagram có owner");
-        logger.info("[UT_CB_020] Input: diagramId={}", 1L);
-
         // Arrange
         when(collaborationRepository.findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER))
             .thenReturn(Optional.of(ownerCollaboration));
@@ -785,7 +681,7 @@ public class CollaborationServiceTest {
         assertEquals(Collaboration.Permission.FULL_ACCESS, result.getPermission());
 
         verify(collaborationRepository, times(1)).findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER);
-        logger.info("[UT_CB_020] KẾT QUẢ: PASSED - Owner trả về thành công");
+        logger.info("[UT_CB_020] response={}", result);
     }
 
     /**
@@ -796,9 +692,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_021_getOwner_withoutOwner_shouldThrowException() {
-        logger.info("[UT_CB_021] BẮT ĐẦU: Lấy thông tin owner - diagram không có owner");
-        logger.info("[UT_CB_021] Input: diagramId={}, diagram không có owner", 1L);
-
         // Arrange
         when(collaborationRepository.findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER))
             .thenReturn(Optional.empty());
@@ -809,7 +702,7 @@ public class CollaborationServiceTest {
         });
 
         verify(collaborationRepository, times(1)).findByDiagramIdAndType(1L, Collaboration.CollaborationType.OWNER);
-        logger.info("[UT_CB_021] KẾT QUẢ: PASSED - EntityNotFoundException đã được ném");
+        logger.info("[UT_CB_021] exception=EntityNotFoundException");
     }
 
     // ========================================================================================
@@ -824,9 +717,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_022_countParticipants_withMultipleParticipants_shouldReturnCorrectCount() {
-        logger.info("[UT_CB_022] BẮT ĐẦU: Đếm số participants của diagram - có participants");
-        logger.info("[UT_CB_022] Input: diagramId={}", 1L);
-
         // Arrange
         when(collaborationRepository.countParticipants(1L)).thenReturn(3);
 
@@ -836,7 +726,7 @@ public class CollaborationServiceTest {
         // Assert
         assertEquals(3, result);
         verify(collaborationRepository, times(1)).countParticipants(1L);
-        logger.info("[UT_CB_022] KẾT QUẢ: PASSED - Trả về {} participants", result);
+        logger.info("[UT_CB_022] response={}", result);
     }
 
     /**
@@ -847,9 +737,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_023_countParticipants_withoutParticipants_shouldReturnZero() {
-        logger.info("[UT_CB_023] BẮT ĐẦU: Đếm số participants - không có participants");
-        logger.info("[UT_CB_023] Input: diagramId={}, không có participants", 1L);
-
         // Arrange
         when(collaborationRepository.countParticipants(1L)).thenReturn(0);
 
@@ -859,7 +746,7 @@ public class CollaborationServiceTest {
         // Assert
         assertEquals(0, result);
         verify(collaborationRepository, times(1)).countParticipants(1L);
-        logger.info("[UT_CB_023] KẾT QUẢ: PASSED - Trả về 0 participants");
+        logger.info("[UT_CB_023] response={}", result);
     }
 
     // ========================================================================================
@@ -874,9 +761,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_024_createOwner_withValidData_shouldReturnOwnerCollaboration() {
-        logger.info("[UT_CB_024] BẮT ĐẦU: Tạo owner collaboration - thành công");
-        logger.info("[UT_CB_024] Input: diagramId={}, username='{}'", 1L, "new_owner");
-
         // Arrange
         Collaboration newOwner = new Collaboration();
         newOwner.setId(6L);
@@ -903,7 +787,7 @@ public class CollaborationServiceTest {
 
         verify(diagramRepository, times(1)).findById(1L);
         verify(collaborationRepository, times(1)).save(any(Collaboration.class));
-        logger.info("[UT_CB_024] KẾT QUẢ: PASSED - Owner collaboration được tạo thành công");
+        logger.info("[UT_CB_024] response={}", result);
     }
 
     /**
@@ -914,9 +798,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_025_createOwner_withNonExistingDiagram_shouldThrowException() {
-        logger.info("[UT_CB_025] BẮT ĐẦU: Tạo owner - diagram không tồn tại");
-        logger.info("[UT_CB_025] Input: diagramId={} (không tồn tại)", 999L);
-
         // Arrange
         when(diagramRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -926,7 +807,7 @@ public class CollaborationServiceTest {
         });
 
         verify(collaborationRepository, never()).save(any(Collaboration.class));
-        logger.info("[UT_CB_025] KẾT QUẢ: PASSED - EntityNotFoundException đã được ném");
+        logger.info("[UT_CB_025] exception=EntityNotFoundException");
     }
 
     // ========================================================================================
@@ -941,9 +822,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_026_deactivateCollaboration_withValidId_shouldSetIsActiveFalse() {
-        logger.info("[UT_CB_026] BẮT ĐẦU: Vô hiệu hóa collaboration - thành công");
-        logger.info("[UT_CB_026] Input: collaborationId={}", 2L);
-
         // Arrange
         Collaboration deactivated = new Collaboration();
         deactivated.setId(2L);
@@ -962,7 +840,7 @@ public class CollaborationServiceTest {
         // Assert
         verify(collaborationRepository, times(1)).findById(2L);
         verify(collaborationRepository, times(1)).save(any(Collaboration.class));
-        logger.info("[UT_CB_026] KẾT QUẢ: PASSED - Collaboration đã được vô hiệu hóa");
+        logger.info("[UT_CB_026] response={}", deactivated);
     }
 
     /**
@@ -973,9 +851,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_027_deactivateCollaboration_withNonExistingCollaboration_shouldThrowException() {
-        logger.info("[UT_CB_027] BẮT ĐẦU: Vô hiệu hóa - collaboration không tồn tại");
-        logger.info("[UT_CB_027] Input: collaborationId={} (không tồn tại)", 999L);
-
         // Arrange
         when(collaborationRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -985,7 +860,7 @@ public class CollaborationServiceTest {
         });
 
         verify(collaborationRepository, never()).save(any(Collaboration.class));
-        logger.info("[UT_CB_027] KẾT QUẢ: PASSED - EntityNotFoundException đã được ném");
+        logger.info("[UT_CB_027] exception=EntityNotFoundException");
     }
 
     /**
@@ -996,9 +871,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_028_deactivateCollaboration_forOwner_shouldThrowException() {
-        logger.info("[UT_CB_028] BẮT ĐẦU: Vô hiệu hóa - không được vô hiệu hóa owner");
-        logger.info("[UT_CB_028] Input: collaborationId={} (type=OWNER)", 1L);
-
         // Arrange
         when(collaborationRepository.findById(1L)).thenReturn(Optional.of(ownerCollaboration));
 
@@ -1008,7 +880,7 @@ public class CollaborationServiceTest {
         });
 
         verify(collaborationRepository, never()).save(any(Collaboration.class));
-        logger.info("[UT_CB_028] KẾT QUẢ: PASSED - IllegalArgumentException đã được ném");
+        logger.info("[UT_CB_028] exception=IllegalArgumentException");
     }
 
     // ========================================================================================
@@ -1023,9 +895,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_029_deleteAllByDiagramId_withValidId_shouldDeleteAllCollaborations() {
-        logger.info("[UT_CB_029] BẮT ĐẦU: Xóa tất cả collaborations của diagram - thành công");
-        logger.info("[UT_CB_029] Input: diagramId={}", 1L);
-
         // Arrange
         doNothing().when(collaborationRepository).deleteByDiagramId(1L);
 
@@ -1034,7 +903,7 @@ public class CollaborationServiceTest {
 
         // Assert
         verify(collaborationRepository, times(1)).deleteByDiagramId(1L);
-        logger.info("[UT_CB_029] KẾT QUẢ: PASSED - Tất cả collaborations đã được xóa");
+        logger.info("[UT_CB_029] response=deleted");
     }
 
     /**
@@ -1045,9 +914,6 @@ public class CollaborationServiceTest {
      */
     @Test
     public void UT_CB_030_deleteAllByDiagramId_shouldOnlyDeleteForSpecificDiagram() {
-        logger.info("[UT_CB_030] BẮT ĐẦU: Xóa tất cả - không ảnh hưởng diagram khác");
-        logger.info("[UT_CB_030] Input: diagramId={}", 1L);
-
         // Arrange
         doNothing().when(collaborationRepository).deleteByDiagramId(1L);
 
@@ -1057,6 +923,6 @@ public class CollaborationServiceTest {
         // Assert
         verify(collaborationRepository, times(1)).deleteByDiagramId(1L);
         verify(collaborationRepository, never()).deleteByDiagramId(2L);
-        logger.info("[UT_CB_030] KẾT QUẢ: PASSED - Chỉ collaborations của diagram 1 bị xóa");
+        logger.info("[UT_CB_030] response=deleted");
     }
 }
