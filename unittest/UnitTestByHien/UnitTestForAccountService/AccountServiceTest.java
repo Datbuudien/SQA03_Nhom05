@@ -458,6 +458,102 @@ class AccountServiceTest {
 
     /**
      * TestCaseID: UN_AS_016
+     * Mục tiêu:
+     * - Phủ nhánh updateAccount khi findByCccd trả Optional.empty().
+     * - Email có giá trị hợp lệ và findByEmail trả Optional.empty() -> update vẫn
+     * thành công.
+     */
+    @Test
+    void updateAccount_shouldSaveSuccessfully_whenCccdAndEmailDoNotExistInOtherAccounts() {
+        Account existingAccount = new Account();
+        existingAccount.setId(1L);
+        existingAccount.setUsername("alice");
+        existingAccount.setPassword("old-encoded-password");
+        existingAccount.setVisible(1);
+
+        Account updateRequest = new Account();
+        updateRequest.setId(1L);
+        updateRequest.setUsername("alice");
+        updateRequest.setCccd("000000000000");
+        updateRequest.setEmail("brand-new@example.com");
+
+        when(mockAccountRepository.findByUsernameAndVisible("alice", 1)).thenReturn(Optional.of(existingAccount));
+        when(mockAccountRepository.findByCccdAndVisible("000000000000", 1)).thenReturn(Optional.empty());
+        when(mockAccountRepository.findByEmailAndVisible("brand-new@example.com", 1)).thenReturn(Optional.empty());
+        when(mockAccountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Account updatedAccount = serviceUnderTest.updateAccount(updateRequest);
+
+        assertEquals("old-encoded-password", updatedAccount.getPassword());
+        assertEquals(1, updatedAccount.getVisible());
+        verify(mockAccountRepository, times(1)).findByEmailAndVisible("brand-new@example.com", 1);
+        verify(mockAccountRepository, times(1)).save(updateRequest);
+    }
+
+    /**
+     * TestCaseID: UN_AS_017
+     * Mục tiêu:
+     * - Phủ nhánh bỏ qua kiểm tra email khi email = null.
+     */
+    @Test
+    void updateAccount_shouldSkipEmailCheckAndSave_whenEmailIsNull() {
+        Account existingAccount = new Account();
+        existingAccount.setId(1L);
+        existingAccount.setUsername("alice");
+        existingAccount.setPassword("old-encoded-password");
+        existingAccount.setVisible(1);
+
+        Account updateRequest = new Account();
+        updateRequest.setId(1L);
+        updateRequest.setUsername("alice");
+        updateRequest.setCccd("012345678901");
+        updateRequest.setEmail(null);
+
+        when(mockAccountRepository.findByUsernameAndVisible("alice", 1)).thenReturn(Optional.of(existingAccount));
+        when(mockAccountRepository.findByCccdAndVisible("012345678901", 1)).thenReturn(Optional.of(updateRequest));
+        when(mockAccountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Account updatedAccount = serviceUnderTest.updateAccount(updateRequest);
+
+        assertEquals("old-encoded-password", updatedAccount.getPassword());
+        assertEquals(1, updatedAccount.getVisible());
+        verify(mockAccountRepository, never()).findByEmailAndVisible(any(), eq(1));
+        verify(mockAccountRepository, times(1)).save(updateRequest);
+    }
+
+    /**
+     * TestCaseID: UN_AS_018
+     * Mục tiêu:
+     * - Phủ nhánh bỏ qua kiểm tra email khi email chỉ chứa khoảng trắng.
+     */
+    @Test
+    void updateAccount_shouldSkipEmailCheckAndSave_whenEmailIsBlank() {
+        Account existingAccount = new Account();
+        existingAccount.setId(1L);
+        existingAccount.setUsername("alice");
+        existingAccount.setPassword("old-encoded-password");
+        existingAccount.setVisible(1);
+
+        Account updateRequest = new Account();
+        updateRequest.setId(1L);
+        updateRequest.setUsername("alice");
+        updateRequest.setCccd("012345678901");
+        updateRequest.setEmail("   ");
+
+        when(mockAccountRepository.findByUsernameAndVisible("alice", 1)).thenReturn(Optional.of(existingAccount));
+        when(mockAccountRepository.findByCccdAndVisible("012345678901", 1)).thenReturn(Optional.of(updateRequest));
+        when(mockAccountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Account updatedAccount = serviceUnderTest.updateAccount(updateRequest);
+
+        assertEquals("old-encoded-password", updatedAccount.getPassword());
+        assertEquals(1, updatedAccount.getVisible());
+        verify(mockAccountRepository, never()).findByEmailAndVisible(any(), eq(1));
+        verify(mockAccountRepository, times(1)).save(updateRequest);
+    }
+
+    /**
+     * TestCaseID: UN_AS_019
      * Defect cần ghi nhận:
      * - updateAccount tìm bản ghi cũ bằng username trong body, không đối chiếu với
      * id (id thường gán từ PUT /account/{id}).
@@ -501,7 +597,7 @@ class AccountServiceTest {
     }
 
     /**
-     * TestCaseID: UN_AS_017
+     * TestCaseID: UN_AS_020
      * Mục tiêu:
      * - Xác minh saveAccount tự set visible = 1 khi visible đang null.
      * CheckDB:
@@ -523,7 +619,7 @@ class AccountServiceTest {
     }
 
     /**
-     * TestCaseID: UN_AS_018
+     * TestCaseID: UN_AS_021
      * Mục tiêu:
      * - Xác minh saveAccount giữ nguyên visible khi đã có giá trị.
      * CheckDB:
@@ -545,7 +641,7 @@ class AccountServiceTest {
     }
 
     /**
-     * TestCaseID: UN_AS_019
+     * TestCaseID: UN_AS_022
      * Mục tiêu:
      * - Xác minh universalSearch ném EntityNotFoundException khi không có kết quả.
      * CheckDB:
@@ -570,7 +666,7 @@ class AccountServiceTest {
     }
 
     /**
-     * TestCaseID: UN_AS_020
+     * TestCaseID: UN_AS_023
      * Mục tiêu:
      * - Xác minh universalSearch trả Page khi có dữ liệu.
      * - Xác minh pageable được thêm sort createdAt DESC theo đặc tả service.
@@ -607,7 +703,7 @@ class AccountServiceTest {
     }
 
     /**
-     * TestCaseID: UN_AS_021
+     * TestCaseID: UN_AS_024
      * Mục tiêu:
      * - Xác minh getAccountsByIds trả danh sách rỗng khi ids = null.
      * CheckDB:
@@ -624,7 +720,7 @@ class AccountServiceTest {
     }
 
     /**
-     * TestCaseID: UN_AS_022
+     * TestCaseID: UN_AS_025
      * Mục tiêu:
      * - Xác minh getAccountsByIds trả danh sách rỗng khi ids trống.
      * CheckDB:
@@ -641,7 +737,7 @@ class AccountServiceTest {
     }
 
     /**
-     * TestCaseID: UN_AS_023
+     * TestCaseID: UN_AS_026
      * Mục tiêu:
      * - Xác minh getAccountsByIds trả đúng danh sách account visible = 1 theo ids.
      * CheckDB:
